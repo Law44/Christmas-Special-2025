@@ -1,4 +1,3 @@
-import React from 'react';
 import { User, Crown, Play } from 'lucide-react';
 
 const LobbyScreen = ({ gameState, startGame, isHost }: any) => {

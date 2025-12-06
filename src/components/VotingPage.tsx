@@ -1,4 +1,3 @@
-import React from 'react';
 import { Skull, User } from 'lucide-react';
 
 const VotingScreen = ({ gameState, user, myPlayer, isHost, castVote, endVoting }: any) => {
@@ -36,7 +35,6 @@ const VotingScreen = ({ gameState, user, myPlayer, isHost, castVote, endVoting }
                 <div className="text-left">
                   <div className="font-bold">{player.name} {isMe && '(Tú)'}</div>
                   {player.isDead && <div className="text-xs text-red-400">Eliminado</div>}
-                  {isHost && <div className="text-xs text-slate-500">{player.votes} votos</div>}
                 </div>
               </div>
               {player.hasVoted && !player.isDead && <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="Ya ha votado"></div>}

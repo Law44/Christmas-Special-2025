@@ -1,4 +1,4 @@
-export const DICTIONARIES = {
+export const DICTIONARIES: any = {
     Normal: [
       'Playa', 'Hospital', 'Escuela', 'Supermercado', 'Avión', 'Banco', 'Cine', 'Zoologico', 
       'Hotel', 'Biblioteca', 'Gimnasio', 'Restaurante', 'Circo', 'Estadio', 'Museo'

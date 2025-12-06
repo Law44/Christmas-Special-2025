@@ -10,4 +10,5 @@ export default defineConfig({
       },
     }),
   ],
+  base: '/Christmas-Special-2025/',
 })

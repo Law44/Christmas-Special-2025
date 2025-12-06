@@ -1,4 +1,3 @@
-import React from 'react';
 import { Fingerprint, Crown } from 'lucide-react';
 
 const WelcomeScreen = ({ 

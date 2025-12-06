@@ -1,4 +1,3 @@
-import React from 'react';
 import { Fingerprint, LogOut } from 'lucide-react';
 
 // Definimos props como 'any' para evitar errores estrictos

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, onSnapshot, arrayUnion } from 'firebase/firestore';
-import { auth, db } from './config/firebase'; 
+import { auth, db } from './config/firebase';
 import { DICTIONARIES } from './utils/dictionaries';
 
 // Importación de componentes
@@ -16,10 +16,10 @@ export default function App() {
   const [user, setUser] = useState<any | null>(null);
   const [gameCode, setGameCode] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const [gameState, setGameState] = useState<any>(null); 
+  const [gameState, setGameState] = useState<any>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // Settings locales
   const [numImpostors, setNumImpostors] = useState(1);
   const [dictionary, setDictionary] = useState('Normal');
@@ -36,7 +36,7 @@ export default function App() {
     if (!user || !gameCode) return;
 
     const gameRef = doc(db, 'games', `game_${gameCode.toUpperCase()}`);
-    
+
     const unsubscribe = onSnapshot(gameRef, (snapshot) => {
       if (snapshot.exists()) {
         setGameState(snapshot.data());
@@ -66,7 +66,7 @@ export default function App() {
     if (!playerName.trim()) { setError("Necesitas un nombre."); return; }
     setLoading(true);
     const code = generateRoomCode();
-    
+
     const newGame = {
       code,
       hostId: user.uid,
@@ -104,7 +104,7 @@ export default function App() {
     setLoading(true);
     const code = codeToJoin.toUpperCase();
     const gameRef = doc(db, 'games', `game_${code}`);
-    
+
     try {
       const docSnap = await getDoc(gameRef);
       if (docSnap.exists()) {
@@ -144,8 +144,14 @@ export default function App() {
     const word = dict[Math.floor(Math.random() * dict.length)];
     
     let currentPlayers = [...gameState.players];
+    
     currentPlayers = currentPlayers.map(p => ({
-      ...p, isImpostor: false, isDead: false, votes: 0, hasVoted: false
+      ...p, 
+      isImpostor: false, 
+      isDead: false, 
+      votes: 0, 
+      voters: [], 
+      hasVoted: false
     }));
 
     let impostorCount = 0;
@@ -179,8 +185,16 @@ export default function App() {
     const me = gameState.players.find((p: any) => p.id === user.uid);
     if (me.isDead || me.hasVoted) return;
 
+    const voterName = me.name;
+
     const newPlayers = gameState.players.map((p: any) => {
-      if (p.id === targetPlayerId) return { ...p, votes: p.votes + 1 };
+      if (p.id === targetPlayerId) {
+        return {
+          ...p,
+          votes: p.votes + 1,
+          voters: [...(p.voters || []), voterName]
+        };
+      }
       if (p.id === user.uid) return { ...p, hasVoted: true };
       return p;
     });
@@ -217,8 +231,6 @@ export default function App() {
       eliminated = null;
     }
 
-    newPlayers = newPlayers.map((p: any) => ({ ...p, votes: 0, hasVoted: false }));
-
     const impostorsAlive = newPlayers.filter((p: any) => p.isImpostor && !p.isDead).length;
     const crewAlive = newPlayers.filter((p: any) => !p.isImpostor && !p.isDead).length;
 
@@ -235,8 +247,21 @@ export default function App() {
   };
 
   const nextRound = async () => {
+    if (!gameState) return;
+
+    const playersReset = gameState.players.map((p: any) => ({
+      ...p,
+      votes: 0,     
+      voters: [],     
+      hasVoted: false 
+    }));
+
     const gameRef = doc(db, 'games', `game_${gameCode.toUpperCase()}`);
-    await updateDoc(gameRef, { status: 'playing' });
+    await updateDoc(gameRef, { 
+        status: 'playing',
+        players: playersReset,
+        lastEliminated: null 
+    });
   };
 
   const backToLobby = async () => {
@@ -248,7 +273,7 @@ export default function App() {
 
   if (!gameCode || !gameState) {
     return (
-      <WelcomeScreen 
+      <WelcomeScreen
         playerName={playerName}
         setPlayerName={setPlayerName}
         joinGame={joinGame}
@@ -270,42 +295,42 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col font-sans">
       <Header gameCode={gameCode} onExit={() => setGameCode('')} />
-      
+
       {gameState.status === 'lobby' && (
-        <LobbyScreen 
-          gameState={gameState} 
-          user={user} 
-          startGame={startGame} 
-          isHost={isHost} 
+        <LobbyScreen
+          gameState={gameState}
+          user={user}
+          startGame={startGame}
+          isHost={isHost}
         />
       )}
-      
+
       {gameState.status === 'playing' && (
-        <GameScreen 
-          gameState={gameState} 
-          myPlayer={myPlayer} 
-          isHost={isHost} 
-          startVoting={startVoting} 
+        <GameScreen
+          gameState={gameState}
+          myPlayer={myPlayer}
+          isHost={isHost}
+          startVoting={startVoting}
         />
       )}
-      
+
       {gameState.status === 'voting' && (
-        <VotingScreen 
-          gameState={gameState} 
-          user={user} 
-          myPlayer={myPlayer} 
-          isHost={isHost} 
-          castVote={castVote} 
-          endVoting={endVoting} 
+        <VotingScreen
+          gameState={gameState}
+          user={user}
+          myPlayer={myPlayer}
+          isHost={isHost}
+          castVote={castVote}
+          endVoting={endVoting}
         />
       )}
-      
+
       {gameState.status === 'results' && (
-        <ResultsScreen 
-          gameState={gameState} 
-          isHost={isHost} 
-          backToLobby={backToLobby} 
-          nextRound={nextRound} 
+        <ResultsScreen
+          gameState={gameState}
+          isHost={isHost}
+          backToLobby={backToLobby}
+          nextRound={nextRound}
         />
       )}
     </div>

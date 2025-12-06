@@ -1,4 +1,3 @@
-import React from 'react';
 import { Skull, Fingerprint, Users } from 'lucide-react';
 
 const GameScreen = ({ gameState, myPlayer, isHost, startVoting }: any) => {
@@ -14,7 +13,7 @@ const GameScreen = ({ gameState, myPlayer, isHost, startVoting }: any) => {
             {myPlayer.isImpostor ? <Skull size={64} className="text-red-500" /> : <Fingerprint size={64} className="text-emerald-500" />}
           </div>
           
-          <h3 className="text-xl text-slate-300 uppercase tracking-widest mb-2">Tu Identidad</h3>
+          <h3 className="text-xl text-slate-300 uppercase tracking-widest mb-2">Tu palabra</h3>
           
           {myPlayer.isImpostor ? (
             <>
