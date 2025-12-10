@@ -1,7 +1,7 @@
 import { Skull, Fingerprint, Users } from 'lucide-react';
 
-const GameScreen = ({ gameState, myPlayer, isHost, startVoting }: any) => {
-  return (
+const GameScreen = ({ gameState, myPlayer, isHost, startDebate }: any) => {
+    return (
     <main className="flex-1 p-6 flex flex-col items-center justify-center max-w-md mx-auto w-full">
       {!myPlayer.isDead ? (
         <div className={`w-full aspect-[3/4] rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-2xl transition-all duration-500 ${
@@ -40,12 +40,12 @@ const GameScreen = ({ gameState, myPlayer, isHost, startVoting }: any) => {
       {isHost && (
         <div className="mt-8 w-full">
           <button 
-            onClick={startVoting}
-            className="w-full py-4 bg-orange-600 hover:bg-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition"
+            onClick={startDebate} 
+            className="w-full py-4 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition"
           >
-            <Users size={24} /> INICIAR VOTACIÓN
+            <Users size={24} /> EMPEZAR DEBATE
           </button>
-          <p className="text-center text-xs text-slate-500 mt-2">Pulsa cuando el debate haya terminado.</p>
+          <p className="text-center text-xs text-slate-500 mt-2">Pulsa para ocultar roles y empezar a discutir.</p>
         </div>
       )}
     </main>

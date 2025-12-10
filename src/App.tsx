@@ -11,6 +11,7 @@ import LobbyScreen from './components/LobbyPage';
 import GameScreen from './components/GamePage';
 import VotingScreen from './components/VotingPage';
 import ResultsScreen from './components/ResultsPage';
+import DiscussionScreen from './components/DiscussionPage';
 
 export default function App() {
   const [user, setUser] = useState<any | null>(null);
@@ -23,6 +24,13 @@ export default function App() {
   // Settings locales
   const [numImpostors, setNumImpostors] = useState(1);
   const [dictionary, setDictionary] = useState('Normal');
+
+  useEffect(() => {
+    const savedGameCode = localStorage.getItem('impostorGameCode');
+    if (savedGameCode) {
+      setGameCode(savedGameCode);
+    }
+  }, []);
 
   // --- 1. AUTENTICACIÓN ---
   useEffect(() => {
@@ -39,11 +47,20 @@ export default function App() {
 
     const unsubscribe = onSnapshot(gameRef, (snapshot) => {
       if (snapshot.exists()) {
-        setGameState(snapshot.data());
+        const data = snapshot.data();
+        setGameState(data);
         setError('');
+
+        if (user && data.hostId === user.uid && data.status === 'playing' && data.endTime) {
+          const now = Date.now();
+          if (now > data.endTime) startVoting();
+        }
+
       } else {
         setGameState(null);
-        if (gameState) setError("La partida ha sido cerrada o no existe.");
+        setError("La partida ha sido cerrada o no existe.");
+        localStorage.removeItem('impostorGameCode');
+        setTimeout(() => setGameCode(''), 3000);
       }
     }, (err) => {
       console.error("Error fetching game:", err);
@@ -89,6 +106,7 @@ export default function App() {
     try {
       await setDoc(doc(db, 'games', `game_${code}`), newGame);
       setGameCode(code);
+      localStorage.setItem('impostorGameCode', code);
       setError('');
     } catch (e) {
       console.error(e);
@@ -125,6 +143,7 @@ export default function App() {
             await updateDoc(gameRef, { players: arrayUnion(newPlayer) });
           }
           setGameCode(code);
+          localStorage.setItem('impostorGameCode', code);
           setError('');
         }
       } else {
@@ -139,24 +158,24 @@ export default function App() {
 
   const startGame = async () => {
     if (!gameState) return;
-    
+
     const dict = DICTIONARIES[gameState.settings.dictionary];
     const word = dict[Math.floor(Math.random() * dict.length)];
-    
+
     let currentPlayers = [...gameState.players];
-    
+
     currentPlayers = currentPlayers.map(p => ({
-      ...p, 
-      isImpostor: false, 
-      isDead: false, 
-      votes: 0, 
-      voters: [], 
+      ...p,
+      isImpostor: false,
+      isDead: false,
+      votes: 0,
+      voters: [],
       hasVoted: false
     }));
 
     let impostorCount = 0;
     const maxImpostors = Math.min(gameState.settings.numImpostors, Math.floor(currentPlayers.length / 2));
-    
+
     while (impostorCount < maxImpostors) {
       const randomIndex = Math.floor(Math.random() * currentPlayers.length);
       if (!currentPlayers[randomIndex].isImpostor) {
@@ -173,6 +192,11 @@ export default function App() {
       winner: null,
       lastEliminated: null
     });
+  };
+
+  const startDebate = async () => {
+    const gameRef = doc(db, 'games', `game_${gameCode.toUpperCase()}`);
+    await updateDoc(gameRef, { status: 'discussion' });
   };
 
   const startVoting = async () => {
@@ -251,25 +275,28 @@ export default function App() {
 
     const playersReset = gameState.players.map((p: any) => ({
       ...p,
-      votes: 0,     
-      voters: [],     
-      hasVoted: false 
+      votes: 0,
+      voters: [],
+      hasVoted: false
     }));
 
     const gameRef = doc(db, 'games', `game_${gameCode.toUpperCase()}`);
-    await updateDoc(gameRef, { 
-        status: 'playing',
-        players: playersReset,
-        lastEliminated: null 
+    await updateDoc(gameRef, {
+      status: 'discussion',
+      players: playersReset,
+      lastEliminated: null
     });
   };
-
   const backToLobby = async () => {
     const gameRef = doc(db, 'games', `game_${gameCode.toUpperCase()}`);
     await updateDoc(gameRef, { status: 'lobby', winner: null, lastEliminated: null });
   };
 
-  // --- RENDERIZADO ---
+  const exitGame = () => {
+    setGameCode('');
+    setGameState(null);
+    localStorage.removeItem('impostorGameCode'); // <--- IMPORTANTE: Borramos la memoria
+  };
 
   if (!gameCode || !gameState) {
     return (
@@ -294,7 +321,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col font-sans">
-      <Header gameCode={gameCode} onExit={() => setGameCode('')} />
+      <Header gameCode={gameCode} onExit={exitGame} />
 
       {gameState.status === 'lobby' && (
         <LobbyScreen
@@ -309,6 +336,14 @@ export default function App() {
         <GameScreen
           gameState={gameState}
           myPlayer={myPlayer}
+          isHost={isHost}
+          startDebate={startDebate} // <--- CAMBIO: Pasamos startDebate
+        />
+      )}
+
+      {gameState.status === 'discussion' && (
+        <DiscussionScreen
+          gameState={gameState}
           isHost={isHost}
           startVoting={startVoting}
         />
