@@ -1,4 +1,4 @@
-import { Fingerprint, Crown } from 'lucide-react';
+import { Fingerprint, Crown, Dices } from 'lucide-react';
 
 const WelcomeScreen = ({ 
   playerName, setPlayerName, joinGame, createGame, 
@@ -76,22 +76,38 @@ const WelcomeScreen = ({
               <div className={`grid grid-cols-2 gap-4 mb-4 transition-opacity ${!hasName ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                 <div>
                   <label className="text-xs text-slate-400">Impostores</label>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="3" 
-                    value={numImpostors} 
-                    onChange={(e: any) => setNumImpostors(parseInt(e.target.value))}
-                    className="w-full mt-1 px-3 py-2 bg-slate-700 rounded text-white border border-slate-600 focus:border-emerald-500 outline-none"
-                    disabled={!hasName}
-                  />
+                  <div className="flex gap-1 mt-1">
+                    <input 
+                      type={numImpostors === -1 ? "text" : "number"} 
+                      min="1" 
+                      value={numImpostors === -1 ? "🎲 Aleatorio" : numImpostors} 
+                      onChange={(e: any) => {
+                        const val = parseInt(e.target.value);
+                        setNumImpostors(isNaN(val) ? 1 : val);
+                      }}
+                      className="w-full px-3 py-2 bg-slate-700 rounded text-white border border-slate-600 focus:border-emerald-500 outline-none text-sm"
+                      disabled={!hasName || numImpostors === -1}
+                    />
+                    <button
+                      type="button"
+                      title="Modo Aleatorio"
+                      onClick={() => setNumImpostors(numImpostors === -1 ? 1 : -1)}
+                      className={`px-3 rounded border transition flex items-center justify-center ${
+                        numImpostors === -1 
+                          ? 'bg-emerald-600 border-emerald-500 text-white' 
+                          : 'bg-slate-700 border-slate-600 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Dices size={18} />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs text-slate-400">Diccionario</label>
                   <select 
                     value={dictionary} 
                     onChange={(e: any) => setDictionary(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 bg-slate-700 rounded text-white border border-slate-600 focus:border-emerald-500 outline-none"
+                    className="w-full mt-1 px-3 py-2 bg-slate-700 rounded text-white border border-slate-600 focus:border-emerald-500 outline-none text-sm h-[38px]"
                     disabled={!hasName}
                   >
                     {Object.keys(dictionaries).map(d => <option key={d} value={d}>{d}</option>)}

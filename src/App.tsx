@@ -173,8 +173,17 @@ export default function App() {
       hasVoted: false
     }));
 
+    // --- LÓGICA PARA TOTAL DE IMPOSTORES (MÁXIMO DINÁMICO Y RANDOM) ---
+    let targetImpostors = gameState.settings.numImpostors;
+    const maxPermitted = Math.max(1, Math.floor(currentPlayers.length / 2)); // Evita salas rotas (ej: 4 jugadores = máx 2 impostores)
+
+    if (targetImpostors === -1) {
+      // Si es RANDOM: Elige un número al azar entre 1 y el máximo permitido según la cantidad de jugadores actuales
+      targetImpostors = Math.floor(Math.random() * maxPermitted) + 1;
+    }
+
     let impostorCount = 0;
-    const maxImpostors = Math.min(gameState.settings.numImpostors, Math.floor(currentPlayers.length / 2));
+    const maxImpostors = Math.min(targetImpostors, currentPlayers.length); 
 
     while (impostorCount < maxImpostors) {
       const randomIndex = Math.floor(Math.random() * currentPlayers.length);
